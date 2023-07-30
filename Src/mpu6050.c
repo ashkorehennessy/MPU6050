@@ -44,6 +44,7 @@
 #define TEMP_OUT_H_REG 0x41
 #define GYRO_CONFIG_REG 0x1B
 #define GYRO_XOUT_H_REG 0x43
+#define DATA_RDY_EN_REG 0x38
 
 // Setup MPU6050
 #define MPU6050_ADDR 0xD0
@@ -86,6 +87,11 @@ uint8_t MPU6050_Init(I2C_HandleTypeDef *I2Cx)
         // XA_ST=0,YA_ST=0,ZA_ST=0, FS_SEL=0 -> � 2g
         Data = 0x00;
         HAL_I2C_Mem_Write(I2Cx, MPU6050_ADDR, ACCEL_CONFIG_REG, 1, &Data, 1, i2c_timeout);
+        
+        // Set interrupt enable in DATA_RDY_EN_REG Register
+        // Enable interrupt when data ready
+        Data = 0x01;
+        HAL_I2C_Mem_Write(I2Cx, MPU6050_ADDR, DATA_RDY_EN_REG, 1, &Data, 1, i2c_timeout);
 
         // Set Gyroscopic configuration in GYRO_CONFIG Register
         // XG_ST=0,YG_ST=0,ZG_ST=0, FS_SEL=0 -> � 250 �/s
