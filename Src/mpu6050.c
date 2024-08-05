@@ -50,6 +50,7 @@
 #define MPU6050_ADDR 0xD0
 const uint16_t i2c_timeout = 100;
 const double Accel_Z_corrector = 14418.0;
+double Gyro_Z_corrector = 0.0;
 
 uint32_t timer;
 
@@ -182,7 +183,7 @@ void MPU6050_Read_All(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct)
     DataStruct->Temperature = (float)((int16_t)temp / (float)340.0 + (float)36.53);
     DataStruct->Gx = DataStruct->Gyro_X_RAW / 131.0;
     DataStruct->Gy = DataStruct->Gyro_Y_RAW / 131.0;
-    DataStruct->Gz = DataStruct->Gyro_Z_RAW / 131.0;
+    DataStruct->Gz = DataStruct->Gyro_Z_RAW / 131.0 - Gyro_Z_corrector;
 
     // Kalman angle solve
     double dt = (double)(HAL_GetTick() - timer) / 1000;
@@ -211,6 +212,10 @@ void MPU6050_Read_All(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct)
     if (fabs(DataStruct->KalmanAngleY) > 90)
         DataStruct->Gx = -DataStruct->Gx;
     DataStruct->KalmanAngleX = Kalman_getAngle(&KalmanX, roll, DataStruct->Gx, dt);
+
+    double AngleZ = DataStruct->Gz * dt;
+    if(abs((int)AngleZ) > 1000) AngleZ = 0;
+    DataStruct->AngleZ += AngleZ;
 }
 
 double Kalman_getAngle(Kalman_t *Kalman, double newAngle, double newRate, double dt)
